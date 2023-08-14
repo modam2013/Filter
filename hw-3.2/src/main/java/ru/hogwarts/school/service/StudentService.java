@@ -1,109 +1,121 @@
 package ru.hogwarts.school.service;
 
-import java.util.List;
-import java.util.Optional;
-import java.util.stream.Collectors;
+
 import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Service;
-import org.springframework.web.multipart.MultipartFile;
 import ru.hogwarts.school.dto.FacultyDtoOut;
 import ru.hogwarts.school.dto.StudentDtoIn;
 import ru.hogwarts.school.dto.StudentDtoOut;
-import ru.hogwarts.school.entity.Avatar;
-import ru.hogwarts.school.entity.Student;
+import ru.hogwarts.school.exception.AvatarNotFoundException;
 import ru.hogwarts.school.exception.FacultyNotFoundException;
 import ru.hogwarts.school.exception.StudentNotFoundException;
 import ru.hogwarts.school.mapper.FacultyMapper;
 import ru.hogwarts.school.mapper.StudentMapper;
+import ru.hogwarts.school.model.Avatar;
+import ru.hogwarts.school.model.Student;
+import ru.hogwarts.school.repository.AvatarRepository;
 import ru.hogwarts.school.repository.FacultyRepository;
 import ru.hogwarts.school.repository.StudentRepository;
 
+import java.util.Collection;
+import java.util.Optional;
+
 @Service
 public class StudentService {
-
   private final StudentRepository studentRepository;
   private final FacultyRepository facultyRepository;
+  private final AvatarRepository avatarRepository;
   private final StudentMapper studentMapper;
   private final FacultyMapper facultyMapper;
-  private final AvatarService avatarService;
 
   public StudentService(StudentRepository studentRepository,
-      FacultyRepository facultyRepository,
-      StudentMapper studentMapper,
-      FacultyMapper facultyMapper,
-      AvatarService avatarService) {
-    this.studentRepository = studentRepository;
-    this.facultyRepository = facultyRepository;
+                        StudentMapper studentMapper,
+                        FacultyRepository facultyRepository,
+                        FacultyMapper facultyMapper,
+                        AvatarRepository avatarRepository
+  ) {
     this.studentMapper = studentMapper;
     this.facultyMapper = facultyMapper;
-    this.avatarService = avatarService;
+    this.studentRepository = studentRepository;
+    this.facultyRepository = facultyRepository;
+    this.avatarRepository = avatarRepository;
   }
 
   public StudentDtoOut create(StudentDtoIn studentDtoIn) {
     return studentMapper.toDto(
-        studentRepository.save(
-            studentMapper.toEntity(studentDtoIn)
-        )
+            studentRepository.save(
+                    studentMapper.toEntity(studentDtoIn)
+            )
     );
-  }
-
-  public StudentDtoOut update(long id, StudentDtoIn studentDtoIn) {
-    return studentRepository.findById(id)
-        .map(oldStudent -> {
-          oldStudent.setAge(studentDtoIn.getAge());
-          oldStudent.setName(studentDtoIn.getName());
-          Optional.ofNullable(studentDtoIn.getFacultyId()).ifPresent(facultyId ->
-              oldStudent.setFaculty(
-                  facultyRepository.findById(facultyId)
-                      .orElseThrow(() -> new FacultyNotFoundException(facultyId))
-              )
-          );
-          return studentMapper.toDto(studentRepository.save(oldStudent));
-        })
-        .orElseThrow(() -> new StudentNotFoundException(id));
-  }
-
-  public StudentDtoOut delete(long id) {
-    Student student = studentRepository.findById(id)
-        .orElseThrow(() -> new StudentNotFoundException(id));
-    studentRepository.delete(student);
-    return studentMapper.toDto(student);
   }
 
   public StudentDtoOut get(long id) {
     return studentRepository.findById(id)
-        .map(studentMapper::toDto)
-        .orElseThrow(() -> new StudentNotFoundException(id));
+            .map(studentMapper::toDto)
+            .orElseThrow(() -> new StudentNotFoundException(id));
   }
 
-  public List<StudentDtoOut> findAll(@Nullable Integer age) {
-    return Optional.ofNullable(age)
-        .map(studentRepository::findAllByAge)
-        .orElseGet(studentRepository::findAll).stream()
-        .map(studentMapper::toDto)
-        .collect(Collectors.toList());
+  public StudentDtoOut update(long studentId, StudentDtoIn studentDtoIn) {
+    Student updatedStudent = studentRepository.findById(studentId)
+            .map(student -> {
+              student.setName(studentDtoIn.getName());
+              student.setAge(studentDtoIn.getAge());
+              long facultyId = studentDtoIn.getFacultyId();
+              student.setFaculty(
+                      facultyRepository.findById(facultyId)
+                              .orElseThrow(() -> new FacultyNotFoundException(facultyId))
+              );
+              return student;
+            })
+            .orElseThrow(() -> new StudentNotFoundException(studentId));
+    studentRepository.save(updatedStudent);
+    return studentMapper.toDto(updatedStudent);
   }
 
-  public List<StudentDtoOut> findByAgeBetween(int ageFrom, int ageTo) {
-    return studentRepository.findAllByAgeBetween(ageFrom, ageTo).stream()
-        .map(studentMapper::toDto)
-        .collect(Collectors.toList());
-  }
-
-  public FacultyDtoOut findFaculty(long id) {
-    return studentRepository.findById(id)
-        .map(Student::getFaculty)
-        .map(facultyMapper::toDto)
-        .orElseThrow(() -> new StudentNotFoundException(id));
-  }
-
-  public StudentDtoOut uploadAvatar(long id, MultipartFile multipartFile) {
+  public StudentDtoOut delete(long id) {
     Student student = studentRepository.findById(id)
-        .orElseThrow(() -> new StudentNotFoundException(id));
-    Avatar avatar = avatarService.create(student, multipartFile);
-    StudentDtoOut studentDtoOut = studentMapper.toDto(student);
-    studentDtoOut.setAvatarUrl("http://localhost:8080/avatars/" + avatar.getId() + "/from-db");
-    return studentDtoOut;
+            .orElseThrow(() -> new StudentNotFoundException(id));
+    studentRepository.deleteById(id);
+    return studentMapper.toDto(student);
   }
 
+  public Collection<StudentDtoOut> findStudentsByAgeBetween(int from, int to) {
+    return studentRepository.findStudentsByAgeBetween(from, to).stream()
+            .map(studentMapper::toDto)
+            .toList();
+  }
+
+  public Collection<StudentDtoOut> findAll(@Nullable Integer age) {
+    return Optional.ofNullable(age)
+            .map(studentRepository::findStudentsByAge)
+            .orElseGet(studentRepository::findAll).stream()
+            .map(studentMapper::toDto)
+            .toList();
+  }
+
+  public FacultyDtoOut findStudentsFaculty(Long studentId) {
+    return studentRepository.findById(studentId)
+            .map(Student::getFaculty)
+            .map(facultyMapper::toDto)
+            .orElseThrow(() -> new StudentNotFoundException(studentId));
+  }
+
+  public Avatar findAvatarByStudentId(long studentId) {
+    return avatarRepository.findByStudent_id(studentId)
+            .orElseThrow(() -> new AvatarNotFoundException(studentId));
+  }
+
+  public Integer getTotalCountStudents() {
+    return studentRepository.getTotalCountStudents();
+  }
+
+  public Double getAvgAgeStudents() {
+    return studentRepository.getAvgAgeStudents();
+  }
+
+  public Collection<StudentDtoOut> getLastFiveStudents() {
+    return studentRepository.getLastFiveStudents().stream()
+            .map(studentMapper::toDto)
+            .toList();
+  }
 }

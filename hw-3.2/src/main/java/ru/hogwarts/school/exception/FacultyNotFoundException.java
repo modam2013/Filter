@@ -1,7 +1,6 @@
 package ru.hogwarts.school.exception;
 
 public class FacultyNotFoundException extends RuntimeException {
-
   private final long id;
 
   public FacultyNotFoundException(long id) {
@@ -10,7 +9,6 @@ public class FacultyNotFoundException extends RuntimeException {
 
   @Override
   public String getMessage() {
-    return "Факультет с id = " + id + " не найден!";
+    return "Факультет с id: " + id + " не найден";
   }
-
 }

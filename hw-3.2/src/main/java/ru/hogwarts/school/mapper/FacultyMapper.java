@@ -1,9 +1,11 @@
 package ru.hogwarts.school.mapper;
-
 import org.springframework.stereotype.Component;
+
+
 import ru.hogwarts.school.dto.FacultyDtoIn;
 import ru.hogwarts.school.dto.FacultyDtoOut;
-import ru.hogwarts.school.entity.Faculty;
+
+import ru.hogwarts.school.model.Faculty;
 
 @Component
 public class FacultyMapper {
@@ -18,9 +20,8 @@ public class FacultyMapper {
 
   public Faculty toEntity(FacultyDtoIn facultyDtoIn) {
     Faculty faculty = new Faculty();
-    faculty.setColor(facultyDtoIn.getColor());
     faculty.setName(facultyDtoIn.getName());
+    faculty.setColor(facultyDtoIn.getColor());
     return faculty;
   }
-
 }

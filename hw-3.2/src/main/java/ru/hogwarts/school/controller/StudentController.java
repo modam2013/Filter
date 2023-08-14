@@ -1,32 +1,35 @@
 package ru.hogwarts.school.controller;
 
-import java.util.List;
+
 import org.springframework.http.MediaType;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PatchMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RequestPart;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import ru.hogwarts.school.dto.FacultyDtoOut;
 import ru.hogwarts.school.dto.StudentDtoIn;
 import ru.hogwarts.school.dto.StudentDtoOut;
+import ru.hogwarts.school.service.AvatarService;
 import ru.hogwarts.school.service.StudentService;
 
+import java.io.IOException;
+import java.util.Collection;
+
+/**
+ * Эндпоинты связанные с аватарками я все таки поместил в контроллер к студентам,
+ * мне кажется это более верное решение, т.к. аватарка в отрыве от студента существовать не может
+ * и получать/загружать ее логичнее все таки по пути начинающегося со /student,
+ * поправьте если не прав, я переделаю
+ */
 @RestController
-@RequestMapping("/students")
+@RequestMapping("/student")
 public class StudentController {
-
   private final StudentService studentService;
+  private final AvatarService avatarService;
 
-  public StudentController(StudentService studentService) {
+  public StudentController(StudentService studentService,
+                           AvatarService avatarService) {
     this.studentService = studentService;
+    this.avatarService = avatarService;
   }
 
   @PostMapping
@@ -34,40 +37,57 @@ public class StudentController {
     return studentService.create(studentDtoIn);
   }
 
-  @PutMapping("/{id}")
-  public StudentDtoOut update(@PathVariable("id") long id, @RequestBody StudentDtoIn studentDtoIn) {
-    return studentService.update(id, studentDtoIn);
-  }
-
   @GetMapping("/{id}")
-  public StudentDtoOut get(@PathVariable("id") long id) {
+  public StudentDtoOut get(@PathVariable long id) {
     return studentService.get(id);
   }
 
+  @PutMapping("/{id}")
+  public StudentDtoOut update(@PathVariable long id,
+                              @RequestBody StudentDtoIn studentDtoIn) {
+    return studentService.update(id, studentDtoIn);
+  }
+
   @DeleteMapping("/{id}")
-  public StudentDtoOut delete(@PathVariable("id") long id) {
+  public StudentDtoOut delete(@PathVariable long id) {
     return studentService.delete(id);
   }
 
-  @GetMapping
-  public List<StudentDtoOut> findAll(@RequestParam(required = false) Integer age) {
+  @GetMapping("/{age}/students")
+  public Collection<StudentDtoOut> findAll(@PathVariable(required = false) int age) {
     return studentService.findAll(age);
   }
 
   @GetMapping("/filter")
-  public List<StudentDtoOut> findByAgeBetween(@RequestParam int ageFrom, @RequestParam int ageTo) {
-    return studentService.findByAgeBetween(ageFrom, ageTo);
+  public Collection<StudentDtoOut> findStudentsByAgeBetween(@RequestParam int from,
+                                                            @RequestParam int to) {
+    return studentService.findStudentsByAgeBetween(from, to);
   }
 
   @GetMapping("/{id}/faculty")
-  public FacultyDtoOut findFaculty(@PathVariable("id") long id) {
-    return studentService.findFaculty(id);
+  public FacultyDtoOut findStudentsFaculty(@PathVariable Long id) {
+    return studentService.findStudentsFaculty(id);
   }
 
-  @PatchMapping(value = "/{id}/avatar", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-  public StudentDtoOut uploadAvatar(@PathVariable long id,
-      @RequestPart("avatar") MultipartFile multipartFile) {
-    return studentService.uploadAvatar(id, multipartFile);
+  @PostMapping(value = "/{id}/avatar", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+  public ResponseEntity<String> uploadAvatar(@PathVariable("id") long studentId,
+                                             @RequestParam MultipartFile avatarImage) throws IOException {
+    avatarService.uploadAvatar(studentId, avatarImage);
+    return ResponseEntity.ok().build();
   }
 
+  @GetMapping("/total-count")
+  public ResponseEntity<Integer> getTotalCountStudents() {
+    return ResponseEntity.ok(studentService.getTotalCountStudents());
+  }
+
+  @GetMapping("/avg-age")
+  public ResponseEntity<Double> getAvgAgeStudents() {
+    return ResponseEntity.ok(studentService.getAvgAgeStudents());
+  }
+
+  @GetMapping("/last-five")
+  public Collection<StudentDtoOut> getLastFiveStudents() {
+    return studentService.getLastFiveStudents();
+  }
 }

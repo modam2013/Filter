@@ -1,18 +1,32 @@
 package ru.hogwarts.school.dto;
 
-public class StudentDtoIn {
+import java.util.Objects;
 
+public class StudentDtoIn {
   private String name;
   private int age;
-  private Long facultyId;
+  private long facultyId;
 
-  public StudentDtoIn(String name, int age, long facultyId) {
-    this.name = name;
-    this.age = age;
-    this.facultyId = facultyId;
+  @Override
+  public String toString() {
+    return "StudentDtoIn{" +
+            "name='" + name + '\'' +
+            ", age=" + age +
+            ", facultyId=" + facultyId +
+            '}';
   }
 
-  public StudentDtoIn() {
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) return true;
+    if (o == null || getClass() != o.getClass()) return false;
+    StudentDtoIn that = (StudentDtoIn) o;
+    return Objects.equals(name, that.name);
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(name);
   }
 
   public String getName() {
@@ -31,12 +45,11 @@ public class StudentDtoIn {
     this.age = age;
   }
 
-  public Long getFacultyId() {
+  public long getFacultyId() {
     return facultyId;
   }
 
-  public void setFacultyId(Long facultyId) {
+  public void setFacultyId(long facultyId) {
     this.facultyId = facultyId;
   }
-
 }

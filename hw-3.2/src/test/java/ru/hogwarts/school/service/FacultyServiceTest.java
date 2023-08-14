@@ -17,6 +17,7 @@ import ru.hogwarts.school.dto.FacultyDtoOut;
 import ru.hogwarts.school.entity.Faculty;
 import ru.hogwarts.school.mapper.FacultyMapper;
 import ru.hogwarts.school.mapper.StudentMapper;
+import ru.hogwarts.school.model.Faculty;
 import ru.hogwarts.school.repository.FacultyRepository;
 import ru.hogwarts.school.repository.StudentRepository;
 
@@ -32,8 +33,8 @@ public class FacultyServiceTest {
     FacultyMapper facultyMapper = new FacultyMapper();
     facultyService = new FacultyService(
         facultyRepository,
-        mock(StudentRepository.class),
-        facultyMapper,
+            (FacultyMapper) mock(StudentRepository.class),
+            (StudentRepository) facultyMapper,
         new StudentMapper(facultyMapper, facultyRepository)
     );
   }

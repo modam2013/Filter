@@ -1,16 +1,30 @@
 package ru.hogwarts.school.dto;
 
-public class FacultyDtoIn {
+import java.util.Objects;
 
+public class FacultyDtoIn {
   private String name;
   private String color;
 
-  public FacultyDtoIn(String name, String color) {
-    this.name = name;
-    this.color = color;
+  @Override
+  public String toString() {
+    return "FacultyDtoIn{" +
+            "name='" + name + '\'' +
+            ", color='" + color + '\'' +
+            '}';
   }
 
-  public FacultyDtoIn() {
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) return true;
+    if (o == null || getClass() != o.getClass()) return false;
+    FacultyDtoIn that = (FacultyDtoIn) o;
+    return Objects.equals(name, that.name) && Objects.equals(color, that.color);
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(name, color);
   }
 
   public String getName() {
@@ -28,5 +42,4 @@ public class FacultyDtoIn {
   public void setColor(String color) {
     this.color = color;
   }
-
 }

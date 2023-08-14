@@ -1,12 +1,35 @@
 package ru.hogwarts.school.dto;
 
-public class StudentDtoOut {
+import java.util.Objects;
 
+public class StudentDtoOut {
   private long id;
   private String name;
   private int age;
   private FacultyDtoOut faculty;
-  private String avatarUrl;
+
+  @Override
+  public String toString() {
+    return "StudentDtoOut{" +
+            "id=" + id +
+            ", name='" + name + '\'' +
+            ", age=" + age +
+            ", faculty=" + faculty +
+            '}';
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) return true;
+    if (o == null || getClass() != o.getClass()) return false;
+    StudentDtoOut that = (StudentDtoOut) o;
+    return id == that.id;
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(id);
+  }
 
   public long getId() {
     return id;
@@ -39,13 +62,4 @@ public class StudentDtoOut {
   public void setFaculty(FacultyDtoOut faculty) {
     this.faculty = faculty;
   }
-
-  public String getAvatarUrl() {
-    return avatarUrl;
-  }
-
-  public void setAvatarUrl(String avatarUrl) {
-    this.avatarUrl = avatarUrl;
-  }
-
 }
